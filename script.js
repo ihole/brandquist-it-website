@@ -1,5 +1,8 @@
 // Navigation functionality
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize EmailJS
+    emailjs.init("AKSlYmJrq4jF8KBDm"); // Replace with your EmailJS public key
+
     const hamburger = document.querySelector('.hamburger');
     const navMenu = document.querySelector('.nav-menu');
     const navLinks = document.querySelectorAll('.nav-link');
@@ -35,34 +38,61 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Contact form handling
+    // Contact form handling with EmailJS
     const contactForm = document.getElementById('contactForm');
     
-    contactForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Get form data
-        const formData = new FormData(contactForm);
-        const name = formData.get('name');
-        const email = formData.get('email');
-        const subject = formData.get('subject');
-        const message = formData.get('message');
+    if (contactForm) {
+        console.log('Contact form found');
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('Form submitted');
+            
+            // Get form data
+            const formData = new FormData(contactForm);
+            const name = formData.get('from_name');
+            const email = formData.get('from_email');
+            const subject = formData.get('subject');
+            const message = formData.get('message');
 
-        // Basic validation
-        if (!name || !email || !subject || !message) {
-            showMessage('Please fill in all fields.', 'error');
-            return;
-        }
+            console.log('Form data:', { name, email, subject, message });
 
-        if (!isValidEmail(email)) {
-            showMessage('Please enter a valid email address.', 'error');
-            return;
-        }
+            // Basic validation
+            if (!name || !email || !subject || !message) {
+                showMessage('Please fill in all fields.', 'error');
+                return;
+            }
 
-        // Simulate form submission (replace with actual form handling)
-        showMessage('Thank you for your message! We will get back to you soon.', 'success');
-        contactForm.reset();
-    });
+            if (!isValidEmail(email)) {
+                showMessage('Please enter a valid email address.', 'error');
+                return;
+            }
+
+            // Show sending state
+            const submitButton = contactForm.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            submitButton.textContent = 'Sending...';
+            submitButton.disabled = true;
+
+            console.log('About to send email with EmailJS');
+
+            // Send email using EmailJS
+            emailjs.sendForm('service_ca65u7u', 'template_bcz1ihc', contactForm)
+                .then(function(response) {
+                    console.log('EmailJS success:', response);
+                    showMessage('Thank you for your message! We will get back to you soon.', 'success');
+                    contactForm.reset();
+                }, function(error) {
+                    console.error('EmailJS error:', error);
+                    showMessage('Sorry, there was an error sending your message. Please try again or contact us directly.', 'error');
+                })
+                .finally(function() {
+                    submitButton.textContent = originalText;
+                    submitButton.disabled = false;
+                });
+        });
+    } else {
+        console.error('Contact form not found');
+    }
 
     // Email validation function
     function isValidEmail(email) {
@@ -139,21 +169,5 @@ document.addEventListener('DOMContentLoaded', function() {
         card.style.transform = 'translateY(30px)';
         card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
         observer.observe(card);
-    });
-
-    // Add loading state to buttons
-    document.querySelectorAll('.btn').forEach(button => {
-        button.addEventListener('click', function() {
-            if (this.type === 'submit') {
-                const originalText = this.textContent;
-                this.textContent = 'Sending...';
-                this.disabled = true;
-                
-                setTimeout(() => {
-                    this.textContent = originalText;
-                    this.disabled = false;
-                }, 2000);
-            }
-        });
     });
 });
